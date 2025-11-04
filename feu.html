@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joyeux Anniversaire !</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease;
+            z-index: 10;
+        }
+        
+        #homeScreen {
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+        
+        #celebrationScreen {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        h1 {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            background: linear-gradient(45deg, #ff0080, #ff8c00, #40e0d0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        #countdown {
+            font-size: 10rem;
+            font-weight: bold;
+            margin: 30px 0;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.7);
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            margin-top: 20px;
+        }
+        
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        
+        #fireworksCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .photo-gallery {
+            width: 90%;
+            max-width: 800px;
+            height: 300px;
+            margin: 30px auto;
+            position: relative;
+            overflow: hidden;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 3px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .photo-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s ease;
+        }
+        
+        .photo {
+            min-width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            border-radius: 12px;
+        }
+        
+        .gallery-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        .gallery-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .gallery-btn.active {
+            background: white;
+            transform: scale(1.3);
+        }
+        
+        .birthday-message {
+            font-size: 2.5rem;
+            margin: 20px 0;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            padding: 0 20px;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            #countdown {
+                font-size: 6rem;
+                height: 150px;
+            }
+            
+            .birthday-message {
+                font-size: 1.8rem;
+            }
+            
+            .photo-gallery {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Écran d'accueil avec compte à rebours -->
+    <div id="homeScreen" class="screen">
+        <h1>Joyeux Anniversaire !</h1>
+        <p>Le spectacle va commencer dans...</p>
+        <div id="countdown">10</div>
+        <button id="startBtn">Démarrer le compte à rebours</button>
+    </div>
+    
+    <!-- Écran de célébration -->
+    <div id="celebrationScreen" class="screen">
+        <h1>🎉 Joyeux Anniversaire ! 🎉</h1>
+        <div class="birthday-message">Que cette journée soit remplie de joie et de bonheur !</div>
+        
+        <!-- Galerie de photos -->
+        <div class="photo-gallery">
+            <div class="photo-container" id="photoContainer">
+                <!-- Les photos seront ajoutées dynamiquement -->
+            </div>
+            <div class="gallery-controls" id="galleryControls">
+                <!-- Les contrôles seront ajoutés dynamiquement -->
+            </div>
+        </div>
+        
+        <button id="restartBtn">Recommencer le spectacle</button>
+    </div>
+    
+    <!-- Canvas pour les feux d'artifice -->
+    <canvas id="fireworksCanvas"></canvas>
+
+    <!-- Audio caché -->
+    <audio id="birthdayAudio" preload="auto" style="display: none;">
+        <source src="https://assets.mixkit.co/music/preview/mixkit-happy-birthday-to-you-458.mp3" type="audio/mpeg">
+        <source src="https://assets.mixkit.co/music/preview/mixkit-happy-birthday-to-you-458.wav" type="audio/wav">
+    </audio>
+
+    <script>
+        // Éléments DOM
+        const homeScreen = document.getElementById('homeScreen');
+        const celebrationScreen = document.getElementById('celebrationScreen');
+        const countdownElement = document.getElementById('countdown');
+        const startBtn = document.getElementById('startBtn');
+        const restartBtn = document.getElementById('restartBtn');
+        const photoContainer = document.getElementById('photoContainer');
+        const galleryControls = document.getElementById('galleryControls');
+        const birthdayAudio = document.getElementById('birthdayAudio');
+        
+        // Variables pour le compte à rebours
+        let countdownValue = 10;
+        let countdownInterval;
+        
+        // Variables pour la galerie
+        let currentPhotoIndex = 0;
+        const photoUrls = [
+            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+            'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+            'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+            'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60',
+            'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60'
+        ];
+        
+        // Initialiser la galerie
+        function initGallery() {
+            // Vider les conteneurs
+            photoContainer.innerHTML = '';
+            galleryControls.innerHTML = '';
+            
+            // Ajouter les photos
+            photoUrls.forEach((url, index) => {
+                const photoDiv = document.createElement('div');
+                photoDiv.className = 'photo';
+                photoDiv.style.backgroundImage = `url(${url})`;
+                photoContainer.appendChild(photoDiv);
+                
+                // Ajouter les contrôles
+                const controlBtn = document.createElement('button');
+                controlBtn.className = `gallery-btn ${index === 0 ? 'active' : ''}`;
+                controlBtn.addEventListener('click', () => showPhoto(index));
+                galleryControls.appendChild(controlBtn);
+            });
+        }
+        
+        // Afficher une photo spécifique
+        function showPhoto(index) {
+            currentPhotoIndex = index;
+            photoContainer.style.transform = `translateX(-${index * 100}%)`;
+            
+            // Mettre à jour les contrôles actifs
+            document.querySelectorAll('.gallery-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === index);
+            });
+        }
+        
+        // Démarrer le diaporama automatique
+        function startSlideshow() {
+            setInterval(() => {
+                currentPhotoIndex = (currentPhotoIndex + 1) % photoUrls.length;
+                showPhoto(currentPhotoIndex);
+            }, 3000);
+        }
+        
+        // Compte à rebours
+        function startCountdown() {
+            startBtn.disabled = true;
+            countdownValue = 10;
+            countdownElement.textContent = countdownValue;
+            
+            countdownInterval = setInterval(() => {
+                countdownValue--;
+                countdownElement.textContent = countdownValue;
+                
+                if (countdownValue === 0) {
+                    clearInterval(countdownInterval);
+                    // Jouer l'audio d'anniversaire
+                    birthdayAudio.play().catch(e => console.log("Lecture audio automatique bloquée:", e));
+                    // Transition vers l'écran de célébration
+                    homeScreen.style.opacity = '0';
+                    homeScreen.style.pointerEvents = 'none';
+                    
+                    setTimeout(() => {
+                        celebrationScreen.style.opacity = '1';
+                        celebrationScreen.style.pointerEvents = 'all';
+                        startFireworks();
+                        startSlideshow();
+                    }, 1000);
+                }
+            }, 1000);
+        }
+        
+        // Système de feux d'artifice
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let fireworks = [];
+        let particles = [];
+        
+        // Ajuster la taille du canvas
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Classes pour les feux d'artifice
+        class Firework {
+            constructor(x, y, targetX, targetY) {
+                this.x = x;
+                this.y = y;
+                this.startX = x;
+                this.startY = y;
+                this.targetX = targetX;
+                this.targetY = targetY;
+                this.distance = Math.hypot(targetX - x, targetY - y);
+                this.traveled = 0;
+                this.speed = 8 + Math.random() * 4;
+                this.angle = Math.atan2(targetY - y, targetX - x);
+                this.velocity = {
+                    x: Math.cos(this.angle) * this.speed,
+                    y: Math.sin(this.angle) * this.speed
+                };
+                this.gravity = 0.02;
+                this.hue = Math.floor(Math.random() * 360);
+                this.brightness = Math.floor(50 + Math.random() * 20);
+                this.alpha = 1;
+                this.trail = [];
+                this.trailLength = 5;
+            }
+            
+            update() {
+                this.trail.push({x: this.x, y: this.y});
+                if (this.trail.length > this.trailLength) {
+                    this.trail.shift();
+                }
+                
+                this.velocity.y += this.gravity;
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                
+                this.traveled = Math.hypot(this.x - this.startX, this.y - this.startY);
+                
+                if (this.traveled >= this.distance) {
+                    this.explode();
+                    return true;
+                }
+                
+                return false;
+            }
+            
+            explode() {
+                const particleCount = 80 + Math.floor(Math.random() * 50);
+                const power = 3 + Math.random() * 3;
+                
+                for (let i = 0; i < particleCount; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const velocity = Math.random() * power;
+                    
+                    particles.push(new Particle(
+                        this.x,
+                        this.y,
+                        Math.cos(angle) * velocity,
+                        Math.sin(angle) * velocity,
+                        this.hue,
+                        this.brightness
+                    ));
+                }
+                
+                createShockwave(this.x, this.y);
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.moveTo(this.trail[0].x, this.trail[0].y);
+                for (let i = 1; i < this.trail.length; i++) {
+                    ctx.lineTo(this.trail[i].x, this.trail[i].y);
+                }
+                ctx.strokeStyle = `hsla(${this.hue}, 100%, ${this.brightness}%, ${this.alpha})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${this.hue}, 100%, ${this.brightness}%, ${this.alpha})`;
+                ctx.fill();
+            }
+        }
+        
+        class Particle {
+            constructor(x, y, vx, vy, hue, brightness) {
+                this.x = x;
+                this.y = y;
+                this.velocity = {
+                    x: vx,
+                    y: vy
+                };
+                this.gravity = 0.05;
+                this.resistance = 0.98;
+                this.hue = hue;
+                this.brightness = brightness;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.02 + 0.005;
+                this.size = Math.random() * 2 + 1;
+            }
+            
+            update() {
+                this.velocity.x *= this.resistance;
+                this.velocity.y *= this.resistance;
+                this.velocity.y += this.gravity;
+                
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                
+                this.alpha -= this.decay;
+                
+                return this.alpha > 0;
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `hsla(${this.hue}, 100%, ${this.brightness}%, ${this.alpha})`;
+                ctx.fill();
+            }
+        }
+        
+        function createShockwave(x, y) {
+            for (let i = 0; i < 10; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 5 + Math.random() * 15;
+                
+                particles.push(new Particle(
+                    x + Math.cos(angle) * distance,
+                    y + Math.sin(angle) * distance,
+                    0, 0,
+                    Math.floor(Math.random() * 360),
+                    100
+                ));
+            }
+        }
+        
+        function createFirework(startX, startY, targetX, targetY) {
+            fireworks.push(new Firework(startX, startY, targetX, targetY));
+        }
+        
+        function createRandomFirework() {
+            const startX = canvas.width / 2;
+            const startY = canvas.height;
+            const targetX = Math.random() * canvas.width;
+            const targetY = Math.random() * canvas.height * 0.7;
+            
+            createFirework(startX, startY, targetX, targetY);
+        }
+        
+        function createSpecialFirework() {
+            const startX = canvas.width / 2;
+            const startY = canvas.height;
+            const targetX = Math.random() * canvas.width;
+            const targetY = Math.random() * canvas.height * 0.6;
+            
+            const firework = new Firework(startX, startY, targetX, targetY);
+            firework.hue = Math.floor(Math.random() * 360);
+            fireworks.push(firework);
+            
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const angle = (Math.PI * 2 / 3) * i;
+                    const distance = 30;
+                    const additionalFirework = new Firework(
+                        startX, startY,
+                        targetX + Math.cos(angle) * distance,
+                        targetY + Math.sin(angle) * distance
+                    );
+                    additionalFirework.hue = firework.hue;
+                    fireworks.push(additionalFirework);
+                }, 100 * i);
+            }
+        }
+        
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = fireworks.length - 1; i >= 0; i--) {
+                if (fireworks[i].update()) {
+                    fireworks.splice(i, 1);
+                } else {
+                    fireworks[i].draw();
+                }
+            }
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                if (particles[i].update()) {
+                    particles[i].draw();
+                } else {
+                    particles.splice(i, 1);
+                }
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        function startFireworks() {
+            // Lancer plusieurs feux d'artifice au début
+            for (let i = 0; i < 8; i++) {
+                setTimeout(createRandomFirework, i * 300);
+            }
+            
+            // Continuer avec des feux aléatoires
+            const fireworkInterval = setInterval(() => {
+                if (Math.random() < 0.7) {
+                    createRandomFirework();
+                } else {
+                    createSpecialFirework();
+                }
+            }, 800);
+            
+            // Arrêter après 30 secondes (pour ne pas surcharger)
+            setTimeout(() => {
+                clearInterval(fireworkInterval);
+            }, 30000);
+        }
+        
+        // Événements
+        startBtn.addEventListener('click', startCountdown);
+        
+        restartBtn.addEventListener('click', () => {
+            // Arrêter l'audio
+            birthdayAudio.pause();
+            birthdayAudio.currentTime = 0;
+            
+            celebrationScreen.style.opacity = '0';
+            celebrationScreen.style.pointerEvents = 'none';
+            
+            setTimeout(() => {
+                homeScreen.style.opacity = '1';
+                homeScreen.style.pointerEvents = 'all';
+                startBtn.disabled = false;
+                countdownElement.textContent = '10';
+            }, 500);
+        });
+        
+        // Initialiser la galerie et démarrer l'animation
+        initGallery();
+        animate();
+    </script>
+</body>
+</html>
